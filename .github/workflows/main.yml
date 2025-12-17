@@ -1,42 +1,57 @@
-name: Build and Deploy
+name: CI/CD Pipeline - DEXMATE
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy
+  build-test-package-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout the repository
-      - name: Checkout repo
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          node-version: 16
+          python-version: '3.11'
 
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm install
-
-      # 4. Build the project
-      - name: Build project
+      - name: Install dependencies (Build)
         run: |
-          npm run build
-          echo "Contents of build folder:"
-          ls -la ./build   # Ensure build folder exists
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Add project root to PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-      # 5. Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Create build artifact
+        run: |
+          zip -r build.zip src -x "*.pyc" "__pycache__/*"
+
+      - name: Run unit tests
+        run: |
+          pytest -q
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.TOKEN }}  # Must exist in repo secrets
-          publish_dir: ./build                
+          name: pokemon-build
+          path: build.zip
+
+      - name: Simulated Deploy
+        uses: actions/download-artifact@v4
+        with:
+          name: pokemon-build
+          path: ./downloaded
+
+      - name: Simulated Deploy - print message using DEPLOY_API_KEY
+        env:
+          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+        run: |
+          echo "Downloaded files:"
+          ls -la ./downloaded
+          echo "Deployment using API Key: $DEPLOY_API_KEY"             
 
                 
 
