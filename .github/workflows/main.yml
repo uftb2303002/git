@@ -36,7 +36,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.TOKEN }}  # Must exist in repo secrets
-          publish_dir: ./build                # Folder created by npm run build
+          publish_dir: ./build                
 
                 
 
