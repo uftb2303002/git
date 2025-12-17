@@ -5,12 +5,9 @@ on:
     branches:
       - main
 
-env:
-  CI: false
-
 jobs:
-  build:
-    name: Build
+  build-and-deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout the repository
@@ -27,26 +24,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 4. Build project
+      # 4. Build the project
       - name: Build project
-        run: npm run build
+        run: |
+          npm run build
+          echo "Contents of build folder:"
+          ls -la ./build   # Ensure build folder exists
 
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    steps:
-      # 1. Checkout again (required for deploy)
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      # 2. Deploy to GitHub Pages
+      # 5. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.TOKEN }}
-          publish_dir: ./build
+          github_token: ${{ secrets.TOKEN }}  # Must exist in repo secrets
+          publish_dir: ./build                # Folder created by npm run build
+
                 
 
 
